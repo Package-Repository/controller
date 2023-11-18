@@ -19,8 +19,8 @@ CONTROLLER_NODE_NAME                    = "controller"
 JOY_NODE_TOPIC_NAME                     = "/joy"
 JOY_PROCESS_NAME                        = "joy_node"
 CONFIG_FILE_NAME                        = "config.json"
+CONFIG_PATH                             = os.curdir + "/" + CONFIG_FILE_NAME
 JOY_PATH                                = os.curdir + "/" + JOY_PROCESS_NAME
-JSON_PATH                               = os.curdir + "/" + CONFIG_FILE_NAME
 JOY_NODE_QUEUE_SIZE                     = 10
 MAX_POWER                               = 30
 
@@ -109,7 +109,7 @@ def determine_matrix():
     """
     MATRIX_KEY = "matrix"
     READ_MODE  = 'r'
-    with open(JSON_PATH, READ_MODE) as json_File :
+    with open(CONFIG_PATH, READ_MODE) as json_File :
         sample_load_file=json.load(json_File)
     return sample_load_file[sample_load_file[MATRIX_KEY]]
 
