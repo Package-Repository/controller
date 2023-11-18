@@ -2,7 +2,8 @@
 
 import os
 import rclpy
-import processes
+import fork_processes
+import json
 import numpy as np
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
@@ -16,7 +17,10 @@ from math_operations import normalize_ctrl_vals
 
 CONTROLLER_NODE_NAME                    = "controller"
 JOY_NODE_TOPIC_NAME                     = "/joy"
-JOY_PROCESS                   = "joy_node"
+JOY_PROCESS_NAME                        = "joy_node"
+CONFIG_FILE_NAME                        = "config.json"
+JOY_PATH                                = os.curdir + "/" + JOY_PROCESS_NAME
+JSON_PATH                               = os.curdir + "/" + CONFIG_FILE_NAME
 JOY_NODE_QUEUE_SIZE                     = 10
 MAX_POWER                               = 30
 
@@ -81,10 +85,10 @@ class Controller(Node):
 
     def process_stick_inputs(self, ctrl_vals):
         thrusts = np.dot(self.thrust_mapper, normalize_ctrl_vals(ctrl_vals)) 
-        print(thrusts)
         motor_request = []
         for thrust in thrusts:
             motor_request.append(int(MAX_POWER*thrust))
+        print(motor_request)
         self.can_client.make_motor_request(motor_request)
 
     def process_button_inputs(self, button_inputs):
@@ -98,25 +102,29 @@ class Controller(Node):
             if not button_currently_pressed and button_recorded_as_pressed:
                 self.buttons[i] = BUTTON_RELEASED
 
+
+def determine_matrix():
+    """ 
+        Read Config file for correct Matrix
+    """
+    MATRIX_KEY = "matrix"
+    READ_MODE  = 'r'
+    with open(JSON_PATH, READ_MODE) as json_File :
+        sample_load_file=json.load(json_File)
+    return sample_load_file[sample_load_file[MATRIX_KEY]]
+
+
 def main(args=None):
-    
-    joy_node_process = processes.create_child_program([], os.curdir + "/" + JOY_PROCESS, [JOY_PROCESS])
+    """ 
+        Fork Joy Node and Spin Controller Node
+    """
+    joy_node_process = fork_processes.create_child_program([], JOY_PATH, [JOY_PROCESS_NAME])
     rclpy.init(args=args)
-    thrust_mapper = [
-                        [-1,0,0,1,0,0],
-                        [1,0,0, 1,0,0],
-                        [0,0,0, 0,0,0],
-                        [0,0,0, 0,0,0],
-                        [0,0,0, 0,0,0],
-                        [0,0,0, 0,0,0],
-                        [0,0,0, 0,0,0],
-                        [0,0,0, 0,0,0], 
-                    ]
-    controller = Controller(thrust_mapper=thrust_mapper)
+    controller = Controller(thrust_mapper=determine_matrix())
     rclpy.spin(controller)
     controller.destroy_node()
     rclpy.shutdown()
-    processes.kill_processes(joy_node_process)
+    fork_processes.kill_processes(joy_node_process)
 
 if __name__ == '__main__':
     main()
