@@ -17,13 +17,13 @@ from math_operations import normalize_ctrl_vals
 
 CONTROLLER_NODE_NAME                    = "controller"
 JOY_NODE_TOPIC_NAME                     = "/joy"
-JOY_PROCESS_NAME                        = "joy_node"
-CAN_PROCESS_NAME                        = "unified_can_driver_exec"
-CAN_DRIVER_ARGS                         = [CAN_PROCESS_NAME, "--ros-args", "-p", "can_bus_interface:='can0'", "-p", "do_module_polling:=false", "-p", "module_bitfield:=255"]
+JOY_BINARY_NAME                         = "joy_node"
 CONFIG_FILE_NAME                        = "config.json"
+CAN_BINARY_NAME                         = "unified_can_driver_exec"
+CAN_DRIVER_ARGS                         = [CAN_BINARY_NAME, "--ros-args", "-p", "can_bus_interface:='can0'", "-p", "do_module_polling:=false", "-p", "module_bitfield:=255"]
 CONFIG_PATH                             = os.curdir + "/" + CONFIG_FILE_NAME
-JOY_PATH                                = os.curdir + "/" + JOY_PROCESS_NAME
-CAN_PATH                                = os.curdir + "/" + CAN_PROCESS_NAME
+JOY_PATH                                = os.curdir + "/" + JOY_BINARY_NAME
+CAN_PATH                                = os.curdir + "/" + CAN_BINARY_NAME
 JOY_NODE_QUEUE_SIZE                     = 10
 MAX_POWER                               = 30
 
@@ -74,6 +74,8 @@ class Controller(Node):
             Can_Client.turn_off_light
         ]
         self.can_client = Can_Client()
+        self.can_client.set_bot_in_safe_mode()
+        self.can_client.all_clear()
 
     def controller_subscription_callback(self, msg):
         yaw =   INVERT * msg.axes[LEFT_STICK_HORIZONTAL_JOY_TOPIC_INDEX]
@@ -96,6 +98,7 @@ class Controller(Node):
 
     def process_button_inputs(self, button_inputs):
         for i in range(len(button_inputs)):
+            
             button_currently_pressed = button_inputs[i]
             button_recorded_as_pressed = self.buttons[i]
 
@@ -122,7 +125,7 @@ def main(args=None):
         Fork Joy Node and Spin Controller Node
     """
     children = []
-    fork_processes.create_child_program(child_pids=children, program=JOY_PATH, args=[JOY_PROCESS_NAME])
+    fork_processes.create_child_program(child_pids=children, program=JOY_PATH, args=[JOY_BINARY_NAME])
     fork_processes.create_child_program(child_pids=children, program=CAN_PATH, args=CAN_DRIVER_ARGS)
     rclpy.init(args=args)
     controller = Controller(thrust_mapper=determine_matrix())
@@ -130,7 +133,6 @@ def main(args=None):
     controller.destroy_node()
     rclpy.shutdown()
     fork_processes.kill_processes(children_processes=children)
-
 
 if __name__ == '__main__':
     main()
