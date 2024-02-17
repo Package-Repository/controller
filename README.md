@@ -9,6 +9,7 @@ This packages relies on a few other packages
     - ROS2 joy_node
     - Mechatronics CAN Driver written by Connor Larmer
     - scion_types package with ROS2 types
+    - can_client 
 
 ## Running
 
