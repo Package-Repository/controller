@@ -17,3 +17,4 @@ To run the controller, there are three separate programs. The two dependencies b
 For the CAN Driver to find the scion_types dynamic library, you have to source the ROS2 shell script located at scion_types/install/setup.bash
 This is assuming scion_types is compiled
 
+    source scion_types/install/setup.bash
