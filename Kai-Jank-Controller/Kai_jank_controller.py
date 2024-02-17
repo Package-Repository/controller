@@ -1,10 +1,14 @@
 from inputs import get_gamepad
+from inputs import devices
 import math
 import threading
 import numpy as np
 import os
+import socket
+import pickle
 
 class Controller(object):
+    print(inputs.devices.all_devices)
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
 
@@ -51,6 +55,18 @@ class Controller(object):
         self._monitor_thread.daemon = True
         self._monitor_thread.start()
 
+    def connect_to_socket(self):
+        port = 6969
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(("127.0.0.1", port))
+        s.listen(5)
+        return s
+    
+    def send_command(self, s, command):
+        clientsocket, address = s.accept()
+        print(f"Connection from {address} has been established.")
+        clientsocket.send(bytes(command, "utf-8"))
+        clientsocket.close()
 
     def read(self): # return the buttons/triggers that you care about in this methode
         
@@ -60,11 +76,12 @@ class Controller(object):
             thrust_list.append(int(Controller.REASONABLE_MOTOR_MAX * np.dot(motor, self.input_list)))
 
 
-        command = "cansend can0 010#"
+        command = ""
         for motor_value in thrust_list:
             command += '{:02X}'.format(abs(motor_value))
         
-        os.system(command)
+        self.send_command(self.connect_to_socket(), command)
+        #send command to socket 
         return command
 
 
