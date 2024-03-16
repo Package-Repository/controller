@@ -1,19 +1,21 @@
 from inputs import get_gamepad
 from inputs import devices
+import inputs
 import math
 import threading
 import numpy as np
-import os
 import socket
-import pickle
+import time
 
 class Controller(object):
     print(inputs.devices.all_devices)
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
+    PORT = 6969
+    ADDRESS = "192.168.194.2"
 
     MAX_MOTOR_VAL = 100
-    REASONABLE_MOTOR_MAX = 30
+    REASONABLE_MOTOR_MAX = 50
     def __init__(self):
 
         self.motors = [
@@ -56,17 +58,14 @@ class Controller(object):
         self._monitor_thread.start()
 
     def connect_to_socket(self):
-        port = 6969
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(("127.0.0.1", port))
-        s.listen(5)
-        return s
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((self.ADDRESS, self.PORT))
     
-    def send_command(self, s, command):
-        clientsocket, address = s.accept()
-        print(f"Connection from {address} has been established.")
-        clientsocket.send(bytes(command, "utf-8"))
-        clientsocket.close()
+    def send_command(self, command):
+        self.s.send(command.encode())
+    
+    def twosComplement(self, value, bitLength) :
+        return bin(value & (2**bitLength - 1))
 
     def read(self): # return the buttons/triggers that you care about in this methode
         
@@ -78,10 +77,11 @@ class Controller(object):
 
         command = ""
         for motor_value in thrust_list:
+            motor_value = self.twosComplement(int(motor_value))
             command += '{:02X}'.format(abs(motor_value))
-        
-        self.send_command(self.connect_to_socket(), command)
-        #send command to socket 
+        time.sleep(.1)
+        self.send_command(command)
+        #send command to socket
         return command
 
 
@@ -135,5 +135,6 @@ class Controller(object):
 
 if __name__ == '__main__':
     joy = Controller()
+    joy.connect_to_socket()
     while True:
         print(joy.read())
