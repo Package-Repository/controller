@@ -25,15 +25,19 @@ class Controller(object):
     def __init__(self):
 
         self.motors = [
-#	     LjoyX   LjoyY   RjoyX   RjoyY  Rtrig   Ltrig   Lbump   Rbump
-            [ 0,      -1,     -1,  	0,     -1,  	1,	1,     -1], # motor 0 (top front left)
-            [ 1,  	0,  	0,     -1,  	0,  	0,	0,	0], # motor 1 (bottom front left)
-            [ 0,  	1,     -1,  	0,     -1,  	1,	1,     -1], # motor 2 (top back left)
-            [ 1,  	0,  	0,     -1,   	0,  	0,	0,	0], # motor 3 (bottom back left)
-            [ 0,  	1,  	1,  	0,     -1,  	1,     -1,	1], # motor 4 (top back right)
-            [-1,  	0,  	0,     -1,  	0,  	0,	0,	0], # motor 5 (bottom back right)
-            [ 0,      -1,  	1,  	0,     -1,  	1,     -1,	1], # motor 6 (top front right)
-            [-1,  	0,  	0,     -1,     0,  	0,	0,	0]  # motor 7 (bottom front right)
+#	         LjoyX   LjoyY   RjoyX   RjoyY    Rtrig   Ltrig   LPad       RDpad
+            
+#TODO verify strafe values   
+
+# new       strafe for/bck   roll    ptch#     up#    down#   Lroll#     Rroll#
+            [ 0,      0,      -1,  	  -1,      -1,  	1,	    1,        -1], # motor 0 (top front left)
+            [ 1,  	 -1,  	   0,      0,  	    0,  	0,	    0,	       0], # motor 1 (bottom front left)
+            [ 0,  	  0,      -1,  	   1,      -1,  	1,	    1,        -1], # motor 2 (top back left)
+            [-1,  	 -1,  	   0,      0,   	0,  	0,	    0,	       0], # motor 3 (bottom back left)
+            [ 0,  	  0,  	   1,  	   1,      -1,  	1,     -1,	       1], # motor 4 (top back right)
+            [-1,  	 -1,  	   0,      0,  	    0,  	0,	    0,	       0], # motor 5 (bottom back right)
+            [ 0,      0,  	   1,  	  -1,      -1,  	1,     -1,	       1], # motor 6 (top front right)
+            [ 1,  	 -1,  	   0,      0,       0,  	0,	    0,	       0]  # motor 7 (bottom front right)
         ]
 
         self.LeftJoystickY = 0
@@ -76,7 +80,7 @@ class Controller(object):
 
     def read(self): # return the buttons/triggers that you care about in this method
         # FIXME: make the triggers in L,R order, update motor values above 
-        self.input_list = [self.LeftJoystickX, self.LeftJoystickY, self.RightJoystickX, self.RightJoystickY, self.RightTrigger, self.LeftTrigger, self.LeftBumper, self.RightBumper]
+        self.input_list = [self.LeftJoystickX, self.LeftJoystickY, self.RightJoystickX, self.RightJoystickY, self.RightTrigger, self.LeftTrigger, self.LeftDPad, self.RightDPad]
         thrust_list = []
         for motor in self.motors:
             thrust_list.append(int(Controller.REASONABLE_MOTOR_MAX * np.dot(motor, self.input_list)))
@@ -109,10 +113,10 @@ class Controller(object):
                 elif event.code == 'ABS_RZ':
                     self.RightTrigger = round(event.state / Controller.MAX_TRIG_VAL / 4, 2) # normalize between 0 and 1
                 elif event.code == 'BTN_TL': #FIXME: not working (doesn't hold down)
-                    print("Left Bumper")
+                    #print("Left Bumper")
                     self.LeftBumper = round(event.state / Controller.MAX_JOY_VAL, 2) # normalize between -1 and 1
                 elif event.code == 'BTN_TR': #FIXME: not working (doesn't hold down)
-                    print("Right Bumper")
+                    #print("Right Bumper")
                     self.RightBumper = round(event.state / Controller.MAX_JOY_VAL, 2) # normalize between -1 and 1
                 elif event.code == 'BTN_SOUTH':
                     self.A = event.state
@@ -130,10 +134,10 @@ class Controller(object):
                 #     self.Back = event.state
                 # elif event.code == 'BTN_START':
                 #     self.Start = event.state
-                # elif event.code == 'BTN_TRIGGER_HAPPY1':
-                #     self.LeftDPad = event.state
-                # elif event.code == 'BTN_TRIGGER_HAPPY2':
-                #     self.RightDPad = event.state
+                elif event.code == 'BTN_TRIGGER_HAPPY1':
+                    self.LeftDPad = round(event.state / Controller.MAX_JOY_VAL, 2)
+                elif event.code == 'BTN_TRIGGER_HAPPY2':
+                    self.RightDPad = round(event.state / Controller.MAX_JOY_VAL, 2)
                 # elif event.code == 'BTN_TRIGGER_HAPPY3':
                 #     self.UpDPad = event.state
                 # elif event.code == 'BTN_TRIGGER_HAPPY4':
