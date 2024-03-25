@@ -40,6 +40,8 @@ class Controller(object):
             [ 1,  	 -1,  	   0,      0,       0,  	0,	    0,	       0]  # motor 7 (bottom front right)
         ]
 
+        #FIXME need to verify strafe
+
         self.LeftJoystickY = 0
         self.LeftJoystickX = 0
         self.RightJoystickY = 0
