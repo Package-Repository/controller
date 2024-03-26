@@ -27,7 +27,7 @@ class Controller(object):
         self.motors = [
 #	         LjoyX   LjoyY   RjoyX   RjoyY    Rtrig   Ltrig   LPad       RDpad
             
-#TODO verify strafe values   
+#TODO verify strafe values (guesses based on motor position/orientation)
 
 # new       strafe for/bck   roll    ptch#     up#    down#   Lroll#     Rroll#
             [ 0,      0,      -1,  	  -1,      -1,  	1,	    1,        -1], # motor 0 (top front left)
